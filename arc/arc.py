@@ -23,8 +23,7 @@ class arccachedict(object):
 
     def __getitem__(self, key):
         value = self._cache[key]
-        if key in self._cache:
-            self._adapt(key)
+        self._adapt(key)
         return value
 
     def __setitem__(self, key, value):
