@@ -32,6 +32,10 @@ class arccachedict(object):
 
         if key in self._cache:
             (t.remove(key) for t in (self._T1, self._T2) if key in t)
+            if key in self._T1:
+                self._T1.remove(key)
+            if key in self._T2:
+                self._T2.remove(key)
             self._T2.append(key)
 
         elif key in self._B1:
@@ -76,10 +80,10 @@ class arccachedict(object):
 
     def _replace(self, key):
         l = len(self._T1)
-        if l > 0 and (x in self._B2 or l > p):
-            x = self.T1.popleft()
+        if l > 0 and (key in self._B2 or l > self._maxsize):
+            x = self._T1.popleft()
             self._B1.append(x)
         else:
-            x = self.T2.popleft()
+            x = self._T2.popleft()
             self._B2.append(x)
         del self._cache[x]
