@@ -19,33 +19,37 @@ class arccachedict(object):
         self._B2 = deque()
         self._maxsize = maxsize
         self._ratio = 0
+        self._cache_hit = 0
 
     def __getitem__(self, key):
         value = self._cache[key]
         if key in self._cache:
-            self.__setitem__(key, value)
+            self._adapt(key)
         return value
 
     def __setitem__(self, key, value):
+        self._adapt(key)
+        self._cache[key] = value
+
+    def _adapt(self, key):
         cnt = (self._T1, self._B1, self._T2, self._B2)
         lt1, lb1, lt2, lb2 = (len(c) for c in cnt)
 
         if key in self._cache:
-            (t.remove(key) for t in (self._T1, self._T2) if key in t)
             if key in self._T1:
                 self._T1.remove(key)
             if key in self._T2:
                 self._T2.remove(key)
             self._T2.append(key)
-
+            self._cache_hit += 1
         elif key in self._B1:
-            p = min(self._maxsize, p + max(1, lb2 / lb1))
+            self._ratio = min(self._maxsize, self._ratio + max(1, lb2 / lb1))
             self._replace(key)
             self._B1.remove(key)
             self._T2.append(key)
 
         elif key in self._B2:
-            p = max(self._maxsize, p - max(1, lb1 / lb2))
+            self._ratio = max(self._maxsize, self._ratio - max(1, lb1 / lb2))
             self._replace(key)
             self._B2.remove(key)
             self._T2.append(key)
@@ -63,9 +67,7 @@ class arccachedict(object):
                     if sm == 2*self._maxsize:
                         self._B2.popleft()
                     self._replace(key)
-
-        self._T1.append(key)
-        self._cache[key] = value
+            self._T1.append(key)
 
     def __contains__(self, key):
         return key in self._cache
@@ -80,7 +82,7 @@ class arccachedict(object):
 
     def _replace(self, key):
         l = len(self._T1)
-        if l > 0 and (key in self._B2 or l > self._maxsize):
+        if l > 0 and (self._ratio < l or (l == self._ratio and key in self._B2)):
             x = self._T1.popleft()
             self._B1.append(x)
         else:
