@@ -60,7 +60,7 @@ class arccachedict(object):
         #  Element was seen "recently" seen only once
         #  place it at the MRU position of T2 list
         elif key in self._B2:
-            self._ratio = max(self._maxsize, self._ratio - max(1, lb1 / lb2))
+            self._ratio = max(1, self._ratio - max(1, lb1 / lb2))
             self._replace(key)
             self._B2.remove(key)
             self._T2.append(key)
